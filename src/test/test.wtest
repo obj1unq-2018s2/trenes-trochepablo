@@ -1,0 +1,111 @@
+import trenes.*
+
+describe "group of tests" {
+	
+	const formacion;
+	const vagon1;
+	const vagon2;
+	const loco1;
+	const loco2;
+	
+	const formacion2;
+	const vagon3;
+	const vagon4;
+	const loco3;
+	const loco4;
+	
+	const deposito;
+	
+	fixture {
+		formacion = new Formacion()
+		vagon1 = new VagonPasajero(ancho = 1, largo=2)
+		vagon2 = new VagonCarga(ancho = 1, largo=2, cargaMaxima = 100)
+		formacion.vagones().add(vagon1)
+		formacion.vagones().add(vagon2)
+		
+		loco1 = new Locomotora(peso = 100, pesoMaximoArrastrar = 600, velocidadMax = 120)
+		loco2 = new Locomotora(peso = 100, pesoMaximoArrastrar = 1000, velocidadMax = 150)
+		
+		formacion.locomotoras().add(loco1)
+		formacion.locomotoras().add(loco2)
+		
+		formacion2 = new Formacion()
+		vagon3 = new VagonPasajero(ancho = 2, largo=3)
+		vagon4 = new VagonCarga(ancho = 2, largo=4, cargaMaxima = 150)
+		formacion2.vagones().add(vagon3)
+		formacion2.vagones().add(vagon4)
+		
+		loco3 = new Locomotora(peso = 150, pesoMaximoArrastrar = 700, velocidadMax = 120)
+		loco4 = new Locomotora(peso = 120, pesoMaximoArrastrar = 900, velocidadMax = 150)
+		
+		formacion2.locomotoras().add(loco3)
+		formacion2.locomotoras().add(loco4)
+		
+		deposito = new Deposito()
+		deposito.formacionesArmadas().add(formacion)
+		deposito.formacionesArmadas().add(formacion2)
+		
+	}
+
+	test "2 vagones livianos" {
+		assert.equals(formacion.vagonesLivianos(), 2)
+	}
+	
+	test "2 vagones livianos y 1 pesado" {
+		formacion.vagones().add(new VagonCarga(ancho = 1, largo=2, cargaMaxima = 2500))
+		assert.equals(formacion.vagones().size(), 3)
+		assert.equals(formacion.vagonesLivianos(), 2)
+	}
+	
+	test "velocidad maxima de formacion determinada"{
+		assert.equals(formacion.velocidadMaxima(), 120)
+	}
+	
+	test "formacion eficiente"{
+		assert.that(formacion.esEficiente())
+	}
+	test "formacion no eficiente"{
+		formacion.locomotoras().add(new Locomotora(peso = 100, pesoMaximoArrastrar = 100, velocidadMax = 120))
+		assert.notThat(formacion.esEficiente())
+	}
+	
+	test "formacion puede moverse"{
+		assert.that(formacion.puedeMoverse())
+	}
+	test "formacion no puede moverse"{
+		formacion.vagones().add(new VagonCarga(ancho = 1, largo=2, cargaMaxima = 100000))
+		assert.notThat(formacion.puedeMoverse())
+	}
+	
+	test "puede moverse 0 kgms faltantes"{
+		assert.equals(formacion.cantidadKilosEmpuje(), 0)
+	}
+	
+	test "formacion no puede moverse faltan X kgms faltantes"{
+		formacion.vagones().add(new VagonCarga(ancho = 1, largo=2, cargaMaxima = 100000))
+		assert.equals(formacion.cantidadKilosEmpuje(), 100100)
+	}
+	
+	test "vagones mas pesados"{
+		assert.equals(deposito.vagonesMasPesados(), #{vagon1, vagon3})
+	}
+	
+	test "deposito no necesita conductor experimentado"{
+		assert.notThat(deposito.conductorExperimentado())
+	}
+	
+	test "deposito necesita conductor experimentado"{
+		deposito.formacionesArmadas().get(0).vagones().add(new VagonCarga(ancho = 1, largo=2, cargaMaxima = 100000))
+		assert.that(deposito.conductorExperimentado())
+	}
+	
+	test "agregar locomotora"{
+		assert.that(formacion.puedeMoverse())
+		formacion.vagones().add(new VagonCarga(ancho = 1, largo=2, cargaMaxima = 100000))
+		assert.notThat(formacion.puedeMoverse())
+		deposito.locomotorasSueltas().add(new Locomotora(peso=200, velocidadMax = 100, pesoMaximoArrastrar = 10000000))
+		deposito.agregarLocomotoraAFormacion(formacion)
+		assert.equals(formacion.locomotoras().size(), 3)
+		assert.that(formacion.puedeMoverse())
+	}
+}

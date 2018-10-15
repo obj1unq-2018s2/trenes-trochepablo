@@ -20,7 +20,6 @@ class Formacion{
 		locomotoras.size() + vagones.size() > 20 ||
 		locomotoras.sum{ x => x.peso() } + vagones.sum({x => x.pesoMaximo()}) > 10000
 		
-	method pesoEmpujeFaltate() =  vagones.sum{ x => x.pesoMaximo()} - locomotoras.sum{ x => x.pesoMaximoArrastrar() } 
 }
 
 class Locomotora{
@@ -31,8 +30,8 @@ class Locomotora{
 }
 
 class VagonPasajero{
-	var largo = 0
-	var ancho = 0
+	var property largo = 0
+	var property ancho = 0
 	var property cargaMaxima = 0
 	method cantidadPasajeros(){
 		var cantidad = 0
@@ -71,8 +70,10 @@ class Deposito{
 	method vagonesMasPesados() = formacionesArmadas.map{ x => x.maxVagonPeso() }.asSet()
 	method conductorExperimentado() = formacionesArmadas.any{ x => x.esCompleja() }
 	method agregarLocomotoraAFormacion(formacion){
-		if (not formacion.puedeMoverse() && self.hayLocoArrastreUtil(formacion.pesoEmpujeFaltate())) {
-			formacion.locomotoras().add(locomotorasSueltas.find{ l => l.pesoMaximoArrastrar() >= formacion.pesoEmpujeFaltate() })
+		if (not formacion.puedeMoverse() && self.hayLocoArrastreUtil(formacion.cantidadKilosEmpuje())) {
+			const locomotora = locomotorasSueltas.find{ l => l.pesoMaximoArrastrar() >= formacion.cantidadKilosEmpuje()}
+			formacion.locomotoras().add(locomotora)
+			locomotorasSueltas.remove(locomotora)
 		}
 	}
 	method hayLocoArrastreUtil(arrastreFaltante){
