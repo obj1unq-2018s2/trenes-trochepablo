@@ -1,6 +1,6 @@
 class Formacion{
-	var locomotoras
-	var vagones
+	var property locomotoras = []
+	var property vagones = []
 	method vagonesLivianos() = vagones.count{ x => x.pesoMaximo() < 2500 }
 	method velocidadMaxima() = locomotoras.min{ x => x.velocidadMax() }.velocidadMax()
 	method esEficiente() = locomotoras.all{ x => x.pesoMaximoArrastrar() >= x.peso() * 5 }
@@ -9,15 +9,18 @@ class Formacion{
 	}
 	method cantidadKilosEmpuje(){
 		var cantidad = 0
-		if (self.puedeMoverse()) {
-			cantidad = 0
-		}
-		else{
+		if (not self.puedeMoverse()) {
 			cantidad = vagones.sum{ x => x.pesoMaximo() } - locomotoras.sum{ x => x.pesoMaximoArrastrar() }
 		}
 		return cantidad
 	}
 	method maxVagonPeso() = vagones.max{ x => x.pesoMaximo() }
+
+	method esCompleja() = 
+		locomotoras.size() + vagones.size() > 20 ||
+		locomotoras.sum{ x => x.peso() } + vagones.sum({x => x.pesoMaximo()}) > 10000
+		
+	method pesoEmpujeFaltate() =  vagones.sum{ x => x.pesoMaximo()} - locomotoras.sum{ x => x.pesoMaximoArrastrar() } 
 }
 
 class Locomotora{
@@ -63,7 +66,16 @@ class VagonCarga{
 }
 
 class Deposito{
-	var locomotorasSueltas
-	var formacionesArmadas
+	var property locomotorasSueltas = []
+	var property formacionesArmadas = []
 	method vagonesMasPesados() = formacionesArmadas.map{ x => x.maxVagonPeso() }.asSet()
+	method conductorExperimentado() = formacionesArmadas.any{ x => x.esCompleja() }
+	method agregarLocomotoraAFormacion(formacion){
+		if (not formacion.puedeMoverse() && self.hayLocoArrastreUtil(formacion.pesoEmpujeFaltate())) {
+			formacion.locomotoras().add(locomotorasSueltas.find{ l => l.pesoMaximoArrastrar() >= formacion.pesoEmpujeFaltate() })
+		}
+	}
+	method hayLocoArrastreUtil(arrastreFaltante){
+		return locomotorasSueltas.any{l => l.pesoMaximoArrastrar() >= arrastreFaltante }
+	}
 }
